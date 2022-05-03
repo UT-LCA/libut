@@ -13,6 +13,8 @@ extern void logk_bug(bool fatal, const char *expr,
     _Static_assert(__builtin_choose_expr(__builtin_constant_p(cond), \
                (cond), true),                                        \
                "run-time assertion caught at build-time")
+#else /* defined(__cplusplus) */
+#define __build_assert_if_constant(cond)
 #endif
 
 /* these assertions will get compiled out in release builds (fails on false) */

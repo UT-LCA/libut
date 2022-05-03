@@ -14,10 +14,13 @@
 static const struct init_handler base_init_handlers[] = {
     BASE_INITIALIZER(cpu),
     BASE_INITIALIZER(time),
+    BASE_INITIALIZER(page), /* slab does page level memory manipulation */
+    BASE_INITIALIZER(slab), /* runtime stack and thread struct use slab */
 };
 
 /* per-kthread subsystem initialization */
 static const struct init_handler thread_init_handlers[] = {
+    THREAD_INITIALIZER(page), /* slab does page level memory manipulation */
 };
 
 int run_init_handlers(const char *phase, const struct init_handler *h,

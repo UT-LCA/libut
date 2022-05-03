@@ -12,6 +12,44 @@
 #include <base/assert.h>
 
 /**
+ * mb - a memory barrier
+ *
+ * Ensures all loads and stores before the barrier complete
+ * before all loads and stores after the barrier.
+ */
+#if defined(__x86_64__)
+#define mb() asm volatile("mfence" ::: "memory")
+#elif defined(__aarch64__)
+#define mb() asm volatile("dmb ish" : : : "memory");
+#else
+#define mb() barrier()
+#endif
+
+/**
+ * rmb - a read memory barrier
+ *
+ * Ensures all loads before the barrier complete before
+ * all loads after the barrier.
+ */
+#if defined(__aarch64__)
+#define rmb() asm volatile("dmb ishld" : : : "memory");
+#else
+#define rmb() barrier()
+#endif
+
+/**
+ * wmb - a write memory barrier
+ *
+ * Ensures all stores before the barrier complete before
+ * all stores after the barrier.
+ */
+#if defined(__aarch64__)
+#define wmb() asm volatile("dmb ishst" : : : "memory");
+#else
+#define wmb() barrier()
+#endif
+
+/**
  * store_release - store a native value with release fence semantics
  * @p: the pointer to store
  * @v: the value to store
@@ -19,7 +57,7 @@
 #define store_release(p, v)              \
 do {                                     \
     BUILD_ASSERT(type_is_native(*p));    \
-    barrier();                           \
+    wmb();                               \
     ACCESS_ONCE(*p) = v;                 \
 } while (0)
 
@@ -31,7 +69,7 @@ do {                                     \
 ({                                       \
     BUILD_ASSERT(type_is_native(*p));    \
     typeof(*p) __p = ACCESS_ONCE(*p);    \
-    barrier();                           \
+    rmb();                               \
     __p;                                 \
 })
 
@@ -43,7 +81,7 @@ do {                                     \
 ({                                       \
     BUILD_ASSERT(type_is_native(*p));    \
     typeof(*p) __p = ACCESS_ONCE(*p);    \
-    barrier();                           \
+    rmb();                               \
     __p;                                 \
 })
 

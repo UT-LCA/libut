@@ -12,7 +12,7 @@ static inline void cpu_relax(void)
     asm volatile("pause");
 #elif defined(__aarch64__) && defined(RELAX_IS_ISB)
     asm volatile("isb" : : : "memory");
-#elif defined(__aarch6r__)
+#elif defined(__aarch64__)
     asm volatile("yield" : : : "memory");
 #endif
 }
