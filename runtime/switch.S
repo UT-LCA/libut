@@ -223,6 +223,11 @@ __jmp_runtime_nosave:
 #define IP    (104)   /* instruction pointer */
 #define SP    (112)   /* stack pointer */
 
+/* SIMD&FP registers */
+#if defined(__ARM_NEON)
+#define V8    (120)
+#endif
+
 /**
  * __jmp_thread - executes a thread from the runtime
  * @tf: the trap frame to restore (x0)
@@ -249,6 +254,13 @@ __jmp_thread:
     ldp     x11, x10,  [x0, IP]
     /* restore SP */
     mov     sp,  x10
+
+#if defined(__ARM_NEON)
+    /* restore SIMD&FP registers */
+    add     x10, x0,   V8
+    ld1     {v8.16b, v9.16b, v10.16b, v11.16b},   [x10], #64
+    ld1     {v12.16b, v13.16b, v14.16b, v15.16b}, [x10], #64
+#endif
 
     /* set first argument (in case new thread) */
     ldr     x0,  [x0,  R0] /* ARG0 */
@@ -305,9 +317,15 @@ __jmp_thread_direct:
     stp     x23, x24,  [x0, R23]
     stp     x25, x26,  [x0, R25]
     stp     x27, x28,  [x0, R27]
+#if defined(__ARM_NEON)
+    add     x10, x0,   V8
+    st1     {v8.16b, v9.16b, v10.16b, v11.16b},   [x10], #64
+    st1     {v12.16b, v13.16b, v14.16b, v15.16b}, [x10], #64
+#endif
 
     /* clear the stack busy flag */
-    str     xzr, [x2]
+    dmb     ishst
+    str     wzr, [x2]
 
     /* restore callee regs */
     ldp     x19, x20,  [x1, R19]
@@ -323,6 +341,13 @@ __jmp_thread_direct:
     ldp     x11, x10,  [x1, IP]
     /* restore SP */
     mov     sp,  x10
+
+#if defined(__ARM_NEON)
+    /* restore SIMD&FP registers */
+    add     x10, x1,   V8
+    ld1     {v8.16b, v9.16b, v10.16b, v11.16b},   [x10], #64
+    ld1     {v12.16b, v13.16b, v14.16b, v15.16b}, [x10], #64
+#endif
 
     /* set first argument (in case new thread) */
     ldr     x0,  [x1,  R0] /* ARG0 */
@@ -380,6 +405,13 @@ __jmp_runtime:
     /* save return address (link register) and stack */
     mov     x29, sp
     stp     x30, x29,  [x0, IP]
+
+#if defined(__ARM_NEON)
+    /* save SIMD&FP register */
+    add     x10, x0,   V8
+    st1     {v8.16b, v9.16b, v10.16b, v11.16b},   [x10], #64
+    st1     {v12.16b, v13.16b, v14.16b, v15.16b}, [x10], #64
+#endif
 
     /* set runtime stack pointer */
     mov     sp,  x2

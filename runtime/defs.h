@@ -130,6 +130,11 @@ struct thread_tf {
     uint64_t r30;    /* LR the linker register */
     uint64_t pc;    /* IP the frame pointer */
     uint64_t sp;    /* sP the stack pointer */
+
+#if defined(__ARM_NEON)
+    /* SIMD&FP registers */
+    uint64_t v8_v15[16];
+#endif
 };
 
 #define SPTR(tf)        ((tf)->sp)
