@@ -1,0 +1,13 @@
+#ifndef __UT_HPP
+#define __UT_HPP
+
+extern "C" {
+#include "ut.h"
+}
+
+#include "cc/macros.h"
+#include "cc/sync.h"
+#include "cc/thread.h"
+#include "cc/timer.h"
+
+#endif

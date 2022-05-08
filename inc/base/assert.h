@@ -103,6 +103,8 @@ extern void logk_bug(bool fatal, const char *expr,
 #if !defined(__cplusplus)
 #define BUILD_ASSERT(cond)                              \
     _Static_assert(cond, "build-time condition failed")
+#else
+#define BUILD_ASSERT(cond)
 #endif
 
 /**
@@ -117,4 +119,6 @@ extern void logk_bug(bool fatal, const char *expr,
 #if !defined(__cplusplus)
 #define BUILD_ASSERT_MSG(cond, msg) \
     _Static_assert(cond, msg)
+#else
+#define BUILD_ASSERT_MSG(cond, msg)
 #endif
