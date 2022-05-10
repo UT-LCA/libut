@@ -234,7 +234,7 @@ static __noreturn __noinline void schedule(void)
     BUG_ON((preempt_cnt & ~PREEMPT_NOT_PENDING) != 1);
 
     /* update entry stat counters */
-    start_tsc = rdtsc();
+    start_tsc = libut_rdtsc();
 
     /* increment the RCU generation number (even is in scheduler) */
     store_release(&l->rcu_gen, l->rcu_gen + 1);
@@ -289,13 +289,14 @@ again:
     /* keep trying to find work until the polling timeout expires */
     if (!preempt_needed() &&
         (++iters < RUNTIME_SCHED_POLL_ITERS ||
-         rdtsc() - start_tsc < cycles_per_us * RUNTIME_SCHED_MIN_POLL_US))
+         libut_rdtsc() - start_tsc <
+         cycles_per_us * RUNTIME_SCHED_MIN_POLL_US))
         goto again;
 
     /* did not find anything to run, park this kthread */
     /* we may have got a preempt signal before voluntarily yielding */
     kthread_park(!preempt_needed());
-    start_tsc = rdtsc();
+    start_tsc = libut_rdtsc();
 
     goto again;
 
@@ -314,7 +315,7 @@ done:
     spin_unlock(&l->lock);
 
     /* update exit stat counters */
-    end_tsc = rdtsc();
+    end_tsc = libut_rdtsc();
     last_tsc = end_tsc;
 
     /* increment the RCU generation number (odd is in thread) */
@@ -386,7 +387,7 @@ static __always_inline void enter_schedule(thread_t *myth)
     /* slow path: switch from the uthread stack to the runtime stack */
     if (k->rq_head == k->rq_tail ||
         (!disable_watchdog &&
-         unlikely(rdtsc() - last_watchdog_tsc >
+         unlikely(libut_rdtsc() - last_watchdog_tsc >
               cycles_per_us * RUNTIME_WATCHDOG_US))) {
         jmp_runtime(schedule);
         return;
@@ -503,7 +504,7 @@ static void thread_finish_yield_kthread(void)
     spin_lock(&k->lock);
     clear_preempt_needed();
     kthread_park(false);
-    last_tsc = rdtsc();
+    last_tsc = libut_rdtsc();
     store_release(&k->rcu_gen, k->rcu_gen + 1);
 
     schedule();
@@ -690,7 +691,7 @@ static __noreturn void schedule_start(void)
  */
 void sched_start(void)
 {
-    last_tsc = rdtsc();
+    last_tsc = libut_rdtsc();
     preempt_disable();
     jmp_runtime_nosave(schedule_start);
 }

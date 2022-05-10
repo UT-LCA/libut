@@ -28,7 +28,7 @@ extern void logk_bug(bool fatal, const char *expr,
             __builtin_unreachable();               \
         }                                          \
         } while (0)
-#else /* DEBUG */
+#elif !defined(assert) /* DEBUG */
 #define assert(cond)                               \
     do {                                           \
         __build_assert_if_constant(cond);          \

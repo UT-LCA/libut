@@ -58,7 +58,7 @@
  *
  * Arguments @a and @b are evaluated exactly once
  */
-#define max(a, b)          \
+#define libut_max(a, b)    \
     ({typeof(a) _a = (a);  \
       typeof(b) _b = (b);  \
       _a > _b ? _a : _b;})
@@ -68,7 +68,7 @@
  *
  * Arguments @a and @b are evaluated exactly once
  */
-#define min(a, b)          \
+#define libut_min(a, b)    \
     ({typeof(a) _a = (a);  \
       typeof(b) _b = (b);  \
       _a < _b ? _a : _b;})
@@ -115,8 +115,8 @@
 /**
  * __cstr - converts a value to a string
  */
-#define __cstr_t(x...)    #x
-#define __cstr(x...)    __cstr_t(x)
+#define __cstr_t(...)    #__VA_ARGS__
+#define __cstr(...)    __cstr_t(__VA_ARGS__)
 
 /**
  * BIT - generates a value with one set bit by index

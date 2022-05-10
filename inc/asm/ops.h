@@ -26,7 +26,7 @@ static inline void cpu_serialize(void)
 #endif
 }
 
-static inline uint64_t rdtsc(void)
+static inline uint64_t libut_rdtsc(void)
 {
 #if defined(__x86_64__)
     uint32_t a, d;
@@ -39,7 +39,7 @@ static inline uint64_t rdtsc(void)
 #endif
 }
 
-static inline uint64_t rdtscp(uint32_t *auxp)
+static inline uint64_t libut_rdtscp(uint32_t *auxp)
 {
 #if defined(__x86_64__)
     uint32_t a, d, c;

@@ -12,6 +12,7 @@
 
 #include "defs.h"
 
+static pthread_t tid[NCPU];
 static pthread_barrier_t init_barrier;
 
 static initializer_fn_t global_init_hook = NULL;
@@ -89,16 +90,13 @@ int runtime_set_initializers(initializer_fn_t global_fn,
 }
 
 /**
- * runtime_init - starts the runtime
+ * runtime_initialize - only initialize the runtime, do not start
  * @cfgpath: the path to the configuration file
- * @main_fn: the first function to run as a thread
- * @arg: an argument to @main_fn
  *
- * Does not return if successful, otherwise return  < 0 if an error.
+ * Return 0 if successful, otherwise return  < 0 if an error.
  */
-int runtime_init(const char *cfgpath, thread_fn_t main_fn, void *arg)
+int runtime_initialize(const char *cfgpath)
 {
-    pthread_t tid[NCPU];
     int ret, i;
 
     ret = base_init();
@@ -145,6 +143,20 @@ int runtime_init(const char *cfgpath, thread_fn_t main_fn, void *arg)
         return ret;
     }
 
+    return 0;
+}
+
+/**
+ * runtime_start - starts the runtime after initialization
+ * @main_fn: the first function to run as a thread
+ * @arg: an argument to @main_fn
+ *
+ * Does not return if successful, otherwise return  < 0 if an error.
+ */
+int runtime_start(thread_fn_t main_fn, void *arg)
+{
+    int ret;
+
     /* point of no return starts here */
 
     ret = thread_spawn_main(main_fn, arg);
@@ -167,4 +179,26 @@ int runtime_init(const char *cfgpath, thread_fn_t main_fn, void *arg)
     /* never reached unless things are broken */
     BUG();
     return 0;
+}
+
+/**
+ * runtime_init - starts the runtime
+ * @cfgpath: the path to the configuration file
+ * @main_fn: the first function to run as a thread
+ * @arg: an argument to @main_fn
+ *
+ * Does not return if successful, otherwise return  < 0 if an error.
+ */
+int runtime_init(const char *cfgpath, thread_fn_t main_fn, void *arg)
+{
+    int ret;
+
+    ret = runtime_initialize(cfgpath);
+    if (ret) {
+        return ret;
+    }
+
+    ret = runtime_start(main_fn, arg);
+
+    return ret;
 }

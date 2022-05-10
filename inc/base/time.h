@@ -20,7 +20,7 @@ extern uint64_t start_tsc;
  */
 static inline uint64_t microtime(void)
 {
-    return (rdtsc() - start_tsc) / cycles_per_us;
+    return (libut_rdtsc() - start_tsc) / cycles_per_us;
 }
 
 extern void __time_delay_us(uint64_t us);

@@ -280,6 +280,7 @@ static inline void list_del_from(struct list_head *h, struct list_node *n)
 #endif /* CCAN_LIST_DEBUG */
 
     /* Quick test that catches a surprising number of bugs. */
+    UNUSED(h);
     list_del(n);
 }
 

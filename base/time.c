@@ -20,9 +20,9 @@ uint64_t start_tsc;
 void __time_delay_us(uint64_t us)
 {
     uint64_t cycles = us * cycles_per_us;
-    unsigned long start = rdtsc();
+    unsigned long start = libut_rdtsc();
 
-    while (rdtsc() - start < cycles)
+    while (libut_rdtsc() - start < cycles)
         cpu_relax();
 }
 
@@ -38,10 +38,10 @@ static int time_calibrate_tsc(void)
         uint64_t ns, end, start;
         double secs;
 
-        start = rdtsc();
+        start = libut_rdtsc();
         nanosleep(&sleeptime, NULL);
         clock_gettime(CLOCK_MONOTONIC_RAW, &t_end);
-        end = rdtscp(NULL);
+        end = libut_rdtscp(NULL);
         ns = ((t_end.tv_sec - t_start.tv_sec) * 1E9);
         ns += (t_end.tv_nsec - t_start.tv_nsec);
 
@@ -50,7 +50,7 @@ static int time_calibrate_tsc(void)
         log_info("time: detected %d ticks / us", cycles_per_us);
 
         /* record the start time of the binary */
-        start_tsc = rdtsc();
+        start_tsc = libut_rdtsc();
         return 0;
     }
 

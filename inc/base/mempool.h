@@ -21,8 +21,10 @@ struct mempool {
 extern void __mempool_alloc_debug_check(struct mempool *m, void *item);
 extern void __mempool_free_debug_check(struct mempool *m, void *item);
 #else /* DEBUG */
-static inline void __mempool_alloc_debug_check(struct mempool *m, void *item) {}
-static inline void __mempool_free_debug_check(struct mempool *m, void *item) {}
+static inline void __mempool_alloc_debug_check(__notused struct mempool *m,
+        __notused void *item) {}
+static inline void __mempool_free_debug_check(__notused struct mempool *m,
+        __notused void *item) {}
 #endif /* DEBUG */
 
 /**

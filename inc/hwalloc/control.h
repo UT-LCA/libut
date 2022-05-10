@@ -50,5 +50,7 @@ struct control_hdr {
     unsigned int        magic;
     unsigned int        thread_count;
     struct sched_spec   sched_cfg;
-    struct thread_spec  threads[];
+    struct thread_spec  threads[1];
+    /* avoid flexible array member, but same memory layout, as long as the shm
+     * in runtime/ioqueues.c:ioqueues_register_hwallocd() is big enough */
 };

@@ -87,7 +87,7 @@ static struct proc *control_create_proc(mem_key_t key, size_t len, pid_t pid,
     p->sched_cfg = hdr.sched_cfg;
     p->thread_count = hdr.thread_count;
     p->pending_timer = false;
-    p->uniqid = rdtsc();
+    p->uniqid = libut_rdtsc();
 
     /* initialize the threads */
     for (i = 0; i < hdr.thread_count; i++) {
@@ -127,12 +127,6 @@ static struct proc *control_create_proc(mem_key_t key, size_t len, pid_t pid,
             p->page_paddrs);
     if (ret)
         goto fail_free_just_proc;
-
-    //p->max_overflows = hdr.egress_buf_count;
-    //p->nr_overflows = 0;
-    //p->overflow_queue = malloc(sizeof(unsigned long) * p->max_overflows);
-    //if (p->overflow_queue == NULL)
-    //    goto fail_free_just_proc;
 
     return p;
 

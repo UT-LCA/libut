@@ -132,7 +132,7 @@ extern uint32_t jenkins_hash(const void *key, size_t length);
  */
 static inline uint64_t rand_crc32c(uint32_t seed)
 {
-    return hash_crc32c_one(seed, rdtsc());
+    return hash_crc32c_one(seed, libut_rdtsc());
 }
 
 /**
@@ -142,5 +142,5 @@ static inline uint64_t rand_crc32c(uint32_t seed)
  */
 static inline uint64_t rand_city(void)
 {
-    return hash_city_one(rdtsc());
+    return hash_city_one(libut_rdtsc());
 }

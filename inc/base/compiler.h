@@ -31,6 +31,10 @@
 
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 
+#ifndef UNUSED
+#define UNUSED(x) (void)(x)
+#endif
+
 #define type_is_native(t)          \
     (sizeof(t) == sizeof(char)  || \
      sizeof(t) == sizeof(short) || \
