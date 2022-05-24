@@ -4,7 +4,7 @@ BASEPATH = ../..
 CXXPATH = ../../bindings/cc
 INC     = -I../../inc -I../../bindings/cc -I./
 CXXFLAGS  = -g -Wall -std=gnu++11 -D_GNU_SOURCE $(INC) -march=armv8-a+crc -D_GLIBC_USE_C11_ABI=1 -DTLS_LOCAL_EXEC
-LDFLAGS = -T../../base/base.ld -no-pie
+LDFLAGS = -no-pie
 
 LD	= g++
 CC	= g++

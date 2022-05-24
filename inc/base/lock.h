@@ -37,6 +37,7 @@ static inline bool spin_lock_held(spinlock_t *l)
  */
 static inline void assert_spin_lock_held(spinlock_t *l)
 {
+    UNUSED(l); /* assert might be nothing */
     assert(spin_lock_held(l));
 }
 

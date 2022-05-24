@@ -37,6 +37,7 @@ struct shm_region {
 static inline shmptr_t
 ptr_to_shmptr(struct shm_region *r, void *ptr, size_t len)
 {
+    UNUSED(len); /* assert might be nothing */
     assert((uintptr_t)r->base <= (uintptr_t)ptr);
     assert((uintptr_t)ptr + len <= (uintptr_t)r->base + r->len);
     return (uintptr_t)ptr - (uintptr_t)r->base;

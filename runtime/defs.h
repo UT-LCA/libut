@@ -191,7 +191,7 @@ struct stack {
     uintptr_t    guard[GUARD_PTR_SIZE]; /* unreadable and unwritable */
 };
 
-DECLARE_PERTHREAD(struct tcache_perthread, stack_pt);
+extern __thread struct tcache_perthread __perthread_stack_pt;
 
 /**
  * stack_alloc - allocates a stack

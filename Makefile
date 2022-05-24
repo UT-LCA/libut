@@ -2,7 +2,7 @@ INC     = -I./inc
 CFLAGS  = -g -Wall -std=gnu11 -D_GNU_SOURCE $(INC) -march=armv8-a+crc -DTLS_LOCAL_EXEC
 CXXFLAGS  = -g -Wall -std=gnu++11 -D_GNU_SOURCE $(INC) -march=armv8-a+crc -D_GLIBC_USE_C11_ABI=1 -DTLS_LOCAL_EXEC
 #CFLAGS  = -g -Wall -std=gnu11 -D_GNU_SOURCE $(INC) -mssse3
-LDFLAGS = -T base/base.ld -no-pie
+LDFLAGS = -no-pie
 LD	= gcc
 CC	= gcc
 CXX	= g++
@@ -59,11 +59,11 @@ librt++.a: $(rt_obj)
 libut.a: $(base_obj) $(runtime_obj) $(rt_obj)
 	$(AR) rcs $@ $^
 
-hwallocd: $(hwalloc_obj) libbase.a base/base.ld
+hwallocd: $(hwalloc_obj) libbase.a
 	$(LD) $(LDFLAGS) -o $@ $(hwalloc_obj) libbase.a \
 	-lpthread -lnuma -ldl
 
-$(test_targets): $(test_obj) libbase.a libruntime.a base/base.ld
+$(test_targets): $(test_obj) libbase.a libruntime.a
 	$(LD) $(LDFLAGS) -o $@ $@.o libruntime.a libbase.a -lpthread
 
 install: libbase.a libruntime.a librt++.a libut.a
@@ -73,7 +73,6 @@ install: libbase.a libruntime.a librt++.a libut.a
 	cp -r inc/* -t $(PREFIX)/include/ut
 	mkdir -p $(PREFIX)/include/ut/cc
 	cp bindings/cc/*.h -t $(PREFIX)/include/ut/cc
-	cp base/base.ld $(PREFIX)/lib/ut.ld
 
 # general build rules for all targets
 src = $(base_src) $(test_src) $(hwalloc_src) $(runtime_src) $(rt_src)

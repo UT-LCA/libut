@@ -10,9 +10,6 @@
 #include <base/cpu.h>
 #include <base/thread.h>
 
-#define PERTHREAD_VAL    10
-static DEFINE_PERTHREAD(int, blah);
-
 static int init_thread(void)
 {
     int ret;
@@ -23,10 +20,6 @@ static int init_thread(void)
         return 1;
     }
     BUG_ON(!thread_init_done);
-    BUG_ON(perthread_get(blah) != 0);
-
-    perthread_get(blah) = PERTHREAD_VAL;
-    BUG_ON(perthread_get(blah) != PERTHREAD_VAL);
 
     return ret;
 }

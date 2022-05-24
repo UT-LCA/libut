@@ -43,6 +43,7 @@ static inline bool mutex_held(mutex_t *m)
  */
 static inline void assert_mutex_held(mutex_t *m)
 {
+    UNUSED(m); /* assert might be nothing */
     assert(mutex_held(m));
 }
 

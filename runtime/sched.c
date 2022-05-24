@@ -32,7 +32,7 @@ bool disable_watchdog;
 /* fast allocation of struct thread */
 static struct slab thread_slab;
 static struct tcache *thread_tcache;
-static DEFINE_PERTHREAD(struct tcache_perthread, thread_pt);
+__thread struct tcache_perthread __perthread_thread_pt;
 
 /* used to track cycle usage in scheduler */
 static __thread uint64_t last_tsc;
@@ -526,7 +526,7 @@ static __always_inline thread_t *__thread_create(void)
     struct stack *s;
 
     preempt_disable();
-    th = tcache_alloc(&perthread_get(thread_pt));
+    th = tcache_alloc(&__perthread_thread_pt);
     if (unlikely(!th)) {
         preempt_enable();
         return NULL;
@@ -534,7 +534,7 @@ static __always_inline thread_t *__thread_create(void)
 
     s = stack_alloc();
     if (unlikely(!s)) {
-        tcache_free(&perthread_get(thread_pt), th);
+        tcache_free(&__perthread_thread_pt, th);
         preempt_enable();
         return NULL;
     }
@@ -649,7 +649,7 @@ static void thread_finish_exit(void)
     if (unlikely(th->main_thread))
         init_shutdown(EXIT_SUCCESS);
     stack_free(th->stack);
-    tcache_free(&perthread_get(thread_pt), th);
+    tcache_free(&__perthread_thread_pt, th);
     __self = NULL;
 
     spin_lock(&myk()->lock);
@@ -710,7 +710,7 @@ int sched_init_thread(void)
 {
     struct stack *s;
 
-    tcache_init_perthread(thread_tcache, &perthread_get(thread_pt));
+    tcache_init_perthread(thread_tcache, &__perthread_thread_pt);
 
     s = stack_alloc();
     if (!s)

@@ -15,7 +15,7 @@
 #define STACK_BASE_ADDR    0x200000000000UL
 
 static struct tcache *stack_tcache;
-DEFINE_PERTHREAD(struct tcache_perthread, stack_pt);
+__thread struct tcache_perthread __perthread_stack_pt;
 
 static struct stack *stack_create(void *base)
 {
@@ -105,7 +105,7 @@ static const struct tcache_ops stack_tcache_ops = {
  */
 int stack_init_thread(void)
 {
-    tcache_init_perthread(stack_tcache, &perthread_get(stack_pt));
+    tcache_init_perthread(stack_tcache, &__perthread_stack_pt);
     return 0;
 }
 
