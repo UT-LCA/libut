@@ -140,12 +140,7 @@ int main(int argc, char *argv[])
 {
     int ret;
 
-    if (argc < 2) {
-        printf("arg must be config file\n");
-        return -EINVAL;
-    }
-
-    ret = runtime_init(argv[1], main_handler, NULL);
+    ret = runtime_init((1 < argc) ? argv[1] : NULL, main_handler, NULL);
     if (ret) {
         printf("failed to start runtime\n");
         return ret;

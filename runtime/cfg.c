@@ -152,9 +152,11 @@ int cfg_load(const char *path)
 
     bitmap_init(parsed, ARRAY_SIZE(cfg_handlers), 0);
 
-    log_info("loading configuration from '%s'", path);
+    const char * path2use = (NULL == path) ? getenv("LIBUT_CFG") : path;
 
-    f = fopen(path, "r");
+    log_info("loading configuration from '%s'", path2use);
+
+    f = fopen(path2use, "r");
     if (!f)
         return -errno;
 
