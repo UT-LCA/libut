@@ -12,7 +12,6 @@
 
 #include "defs.h"
 
-static pthread_t tid[NCPU];
 static pthread_barrier_t init_barrier;
 
 static initializer_fn_t global_init_hook = NULL;
@@ -41,6 +40,13 @@ static const struct init_handler thread_init_handlers[] = {
 static const struct init_handler late_init_handlers[] = {
 };
 
+/* per-kthread subsystem finalization */
+static const struct init_handler thread_fini_handlers[] = {
+    /* runtime core */
+    THREAD_FINALIZER(timer),    /* deallocate cacheline timer structure */
+    THREAD_FINALIZER(kthread),  /* deallocate kthread */
+};
+
 static int runtime_init_thread(void)
 {
     int ret;
@@ -60,6 +66,16 @@ static int runtime_init_thread(void)
 
 }
 
+static int runtime_fini_thread(void)
+{
+    int ret;
+
+    ret = run_init_handlers("per-thread fini", thread_fini_handlers,
+                 ARRAY_SIZE(thread_fini_handlers));
+    return ret;
+
+}
+
 static void *pthread_entry(void *data)
 {
     int ret;
@@ -70,8 +86,9 @@ static void *pthread_entry(void *data)
     pthread_barrier_wait(&init_barrier);
     sched_start();
 
-    /* never reached unless things are broken */
-    BUG();
+    ret = runtime_fini_thread();
+    BUG_ON(ret);
+
     return NULL;
 }
 
@@ -127,9 +144,10 @@ int runtime_initialize(const char *cfgpath)
     ret = runtime_init_thread();
     BUG_ON(ret);
 
+    ktids[0] = pthread_self();
     log_info("spawning %d kthreads", maxks);
     for (i = 1; i < maxks; i++) {
-        ret = pthread_create(&tid[i], NULL, pthread_entry, NULL);
+        ret = pthread_create(&ktids[i], NULL, pthread_entry, NULL);
         BUG_ON(ret);
     }
 
@@ -176,8 +194,6 @@ int runtime_start(thread_fn_t main_fn, void *arg)
 
     sched_start();
 
-    /* never reached unless things are broken */
-    BUG();
     return 0;
 }
 

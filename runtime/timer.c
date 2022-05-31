@@ -338,3 +338,18 @@ int timer_init_thread(void)
 
     return 0;
 }
+
+/**
+ * timer_fini_thread - deallocate the per-thread timer
+ *
+ * Returns 0 if successful, otherwise fail.
+ */
+int timer_fini_thread(void)
+{
+    struct kthread *k = myk();
+
+    free(k->timers);
+    k->timers = NULL;
+
+    return 0;
+}

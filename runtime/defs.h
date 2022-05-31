@@ -389,6 +389,7 @@ extern unsigned int guaranteedks;
 extern unsigned int nrks;
 extern struct kthread *ks[NCPU];
 extern struct kthread *allks[NCPU];
+extern pthread_t ktids[NCPU];
 
 extern void kthread_detach(struct kthread *r);
 extern void kthread_park(bool voluntary);
@@ -477,6 +478,10 @@ extern int stack_init_thread(void);
 extern int timer_init_thread(void);
 extern int sched_init_thread(void);
 
+/* per-thread finialization */
+extern int timer_fini_thread(void);
+extern int kthread_fini_thread(void);
+
 /* late initialization */
 extern int ioqueues_register_hwallocd(void);
 
@@ -484,7 +489,8 @@ extern int ioqueues_register_hwallocd(void);
 extern int cfg_load(const char *path);
 
 /* runtime entry helpers */
-extern void sched_start(void) __noreturn;
+extern void sched_start(void);
 extern int thread_spawn_main(thread_fn_t fn, void *arg);
 extern void thread_yield_kthread();
 extern void join_kthread(struct kthread *k);
+extern void ret_pthread();

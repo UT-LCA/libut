@@ -32,6 +32,12 @@ static void handle_sigusr1(int s, siginfo_t *si, void *c)
     thread_yield_kthread();
 }
 
+/* handles kthread termination signals */
+static void handle_sigusr2(int s, siginfo_t *si, void *c)
+{
+    ret_pthread();
+}
+
 /**
  * preempt - entry point for preemption
  */
@@ -59,6 +65,21 @@ int preempt_init(void)
     }
 
     if (sigaction(SIGUSR1, &act, NULL) == -1) {
+        log_err("couldn't register signal handler");
+        return -errno;
+    }
+
+    struct sigaction act2;
+
+    act2.sa_sigaction = handle_sigusr2;
+    act2.sa_flags = SA_SIGINFO | SA_ONSTACK | SA_NODEFER | SA_RESTART;
+
+    if (sigemptyset(&act2.sa_mask) != 0) {
+        log_err("couldn't empty the signal handler mask");
+        return -errno;
+    }
+
+    if (sigaction(SIGUSR2, &act2, NULL) == -1) {
         log_err("couldn't register signal handler");
         return -errno;
     }

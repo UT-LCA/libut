@@ -30,6 +30,8 @@ unsigned int spinks;
 unsigned int guaranteedks = 1;
 /* the number of active kthreads */
 static atomic_t runningks;
+/* an array of kthread IDs */
+pthread_t ktids[NCPU];
 /* an array of attached kthreads (@nrks in total) */
 struct kthread *ks[NCPU];
 /* an array of all kthreads, attached or detached (@maxks in total) */
@@ -51,8 +53,6 @@ static struct kthread *allock(void)
     memset(k, 0, sizeof(*k));
     spin_lock_init(&k->lock);
     list_head_init(&k->rq_overflow);
-    //mbufq_init(&k->txpktq_overflow);
-    //mbufq_init(&k->txcmdq_overflow);
     spin_lock_init(&k->timer_lock);
     k->park_efd = eventfd(0, 0);
     BUG_ON(k->park_efd < 0);
@@ -77,6 +77,30 @@ int kthread_init_thread(void)
     allks[allksn++] = mykthread;
     assert(allksn <= maxks);
     spin_unlock_np(&klock);
+
+    return 0;
+}
+
+/**
+ * kthread_fini_thread - deallocation
+ *
+ * Returns 0 if successful.
+ */
+int kthread_fini_thread(void)
+{
+    int ksn = 0;
+
+    spin_lock_np(&klock);
+    for (; maxks > ksn; ++ksn) {
+        if (allks[ksn] == myk()) {
+            break;
+        }
+    }
+    spin_unlock_np(&klock);
+
+    /* TODO: close eventfd and destroy rq and locks? */
+    allks[ksn] = NULL;
+    free(myk());
 
     return 0;
 }
@@ -143,18 +167,12 @@ found:
     ks[i] = ks[--nrks];
     spin_unlock(&klock);
 
-    /* steal all overflow packets and completions */
-    //mbufq_merge_to_tail(&k->txpktq_overflow, &r->txpktq_overflow);
-    //mbufq_merge_to_tail(&k->txcmdq_overflow, &r->txcmdq_overflow);
-
     /* merge timer queue into our own */
     timer_merge(r);
 
     /* verify the kthread is correctly detached */
     assert(r->rq_head == r->rq_tail);
     assert(list_empty(&r->rq_overflow));
-    //assert(mbufq_empty(&r->txpktq_overflow));
-    //assert(mbufq_empty(&r->txcmdq_overflow));
     assert(r->timern == 0);
 
     /* set state */
@@ -199,9 +217,6 @@ void kthread_park(bool voluntary)
     unsigned long payload = 0;
     uint64_t cmd = TXCMD_PARKED, deadline_us;
 
-    //if (!voluntary ||
-    //    !mbufq_empty(&k->txpktq_overflow) ||
-    //    !mbufq_empty(&k->txcmdq_overflow)) {
     if (!voluntary) {
         payload = (unsigned long)k;
     }

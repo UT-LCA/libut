@@ -2,6 +2,7 @@
  * sched.c - a scheduler for user-level threads
  */
 
+#include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +26,8 @@ __thread thread_t *__self;
 static __thread void *runtime_stack;
 /* a pointer to the bottom of the per-kthread (TLS) runtime stack */
 static __thread void *runtime_stack_base;
+/* a trap frame to save the original pthread state */
+static __thread struct thread_tf pthread_tf;
 
 /* Flag to prevent watchdog from running */
 bool disable_watchdog;
@@ -119,6 +122,29 @@ static __noreturn void jmp_runtime_nosave(runtime_fn_t fn)
     assert_preempt_disabled();
 
     __jmp_runtime_nosave(fn, runtime_stack);
+}
+
+/**
+ * jmp_runtime_save - saves the pthread frame and jumps to a function in the
+ *               runtime
+ * @fn: the runtime function to call
+ *
+ * WARNING: Only the native pthreads should call this function.
+ *
+ * This function saves state of the native pthread and switches to the runtime
+ * stack, so the pthread could terminate itself after restoring the state.
+ */
+static void jmp_runtime_save(runtime_fn_t fn)
+{
+    assert_preempt_disabled();
+
+    __jmp_runtime(&pthread_tf, fn, runtime_stack);
+}
+
+void ret_pthread()
+{
+    log_info("kthread returning");
+    __jmp_thread(&pthread_tf);
 }
 
 static void drain_overflow(struct kthread *l)
@@ -646,8 +672,26 @@ static void thread_finish_exit(void)
     struct thread *th = thread_self();
 
     /* if the main thread dies, kill the whole program */
-    if (unlikely(th->main_thread))
-        init_shutdown(EXIT_SUCCESS);
+    if (unlikely(th->main_thread)) {
+        pthread_t my_tid = pthread_self();
+        int idx = 0;
+        for (; maxks > idx; ++idx) {
+            if (0 == ktids[idx] || ktids[idx] == my_tid) {
+                continue;
+            }
+            if (unlikely(pthread_kill(ktids[idx], SIGUSR2) < 0)) {
+                WARN();
+            }
+        }
+        for (idx = 0; maxks > idx; ++idx) {
+            if (0 == ktids[idx] || ktids[idx] == my_tid) {
+                continue;
+            }
+            pthread_join(ktids[idx], NULL);
+        }
+        ret_pthread();
+        return;
+    }
     stack_free(th->stack);
     tcache_free(&__perthread_thread_pt, th);
     __self = NULL;
@@ -693,7 +737,7 @@ void sched_start(void)
 {
     last_tsc = libut_rdtsc();
     preempt_disable();
-    jmp_runtime_nosave(schedule_start);
+    jmp_runtime_save(schedule_start);
 }
 
 static void runtime_top_of_stack(void)

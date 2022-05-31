@@ -20,6 +20,9 @@ struct init_handler {
 #define LATE_INITIALIZER(name) \
     {__cstr(name), &name ## _init_late}
 
+#define THREAD_FINALIZER(name) \
+    {__cstr(name), &name ## _fini_thread}
+
 extern int run_init_handlers(const char *phase, const struct init_handler *h,
         int nr);
 

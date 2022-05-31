@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
         printf("failed to start runtime\n");
         return ret;
     }
+    log_info("Done");
 
     return 0;
 }
