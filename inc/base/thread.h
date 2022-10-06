@@ -11,6 +11,10 @@
 #include <base/limits.h>
 #include <base/cpu.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* used to define perthread variables */
 #if defined(__aarch64__)
 #define DEFINE_PERTHREAD(type, name)                      \
@@ -86,3 +90,7 @@ extern __thread unsigned int thread_id;
 extern __thread unsigned int thread_numa_node;
 
 extern pid_t thread_gettid(void);
+
+#ifdef __cplusplus
+}
+#endif

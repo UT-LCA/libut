@@ -109,8 +109,16 @@ static inline void bitmap_init(unsigned long *bits, int nbits, bool state)
     memset(bits, state ? 0xff : 0, BITMAP_LONG_SIZE(nbits) * sizeof(long));
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern int bitmap_find_next_set(unsigned long *bits, int nbits, int pos);
 extern int bitmap_find_next_cleared(unsigned long *bits, int nbits, int pos);
+
+#ifdef __cplusplus
+}
+#endif
 
 /**
  * bitmap_for_each_set - generates a loop iteration over each set bit

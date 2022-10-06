@@ -10,6 +10,10 @@
 #include <base/limits.h>
 #include <base/kref.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct slab_node;
 
 struct page {
@@ -226,3 +230,7 @@ static inline void page_put(struct page *pg)
 {
     kref_put(&pg->ref, page_release);
 }
+
+#ifdef __cplusplus
+}
+#endif

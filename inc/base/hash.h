@@ -13,6 +13,10 @@
 
 #include <asm/ops.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * hash_crc32c_one - hashes one 64-bit word
  * @seed: useful for creating multiple hash functions
@@ -144,3 +148,7 @@ static inline uint64_t rand_city(void)
 {
     return hash_city_one(libut_rdtsc());
 }
+
+#ifdef __cplusplus
+}
+#endif

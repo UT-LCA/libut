@@ -44,6 +44,10 @@ typedef unsigned long virtaddr_t; /* virtual addresses */
 
 typedef unsigned int mem_key_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void *mem_map_anom(void *base, size_t len, size_t pgsize, int node);
 extern void *mem_map_file(void *base, size_t len, int fd, off_t offset);
 extern void *mem_map_shm(mem_key_t key, void *base, size_t len,
@@ -51,6 +55,10 @@ extern void *mem_map_shm(mem_key_t key, void *base, size_t len,
 extern int mem_unmap_shm(void *base);
 extern int mem_lookup_page_phys_addrs(void *addr, size_t len, size_t pgsize,
         physaddr_t *maddrs);
+
+#ifdef __cplusplus
+}
+#endif
 
 static inline int
 mem_lookup_page_phys_addr(void *addr, size_t pgsize, physaddr_t *paddr)

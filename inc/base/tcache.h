@@ -9,6 +9,10 @@
 #include <base/list.h>
 #include <base/atomic.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define TCACHE_MAX_MAG_SIZE       64
 #define TCACHE_DEFAULT_MAG_SIZE    8
 
@@ -92,3 +96,7 @@ extern void tcache_init_perthread(struct tcache *tc,
                   struct tcache_perthread *ltc);
 extern void tcache_reclaim(struct tcache *tc);
 extern void tcache_print_usage(void);
+
+#ifdef __cplusplus
+}
+#endif

@@ -9,6 +9,10 @@
 #include <base/thread.h>
 #include <base/limits.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* forward declarations */
 struct slab_node;
 struct tcache;
@@ -74,3 +78,7 @@ static __always_inline void *slab_alloc(struct slab *s)
 }
 
 extern struct tcache *slab_create_tcache(struct slab *s, unsigned int mag_size);
+
+#ifdef __cplusplus
+}
+#endif

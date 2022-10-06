@@ -7,6 +7,10 @@
 #include <base/stddef.h>
 #include <base/tcache.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct mempool {
     void            **free_items;
     size_t          allocated;
@@ -61,3 +65,7 @@ extern void mempool_destroy(struct mempool *m);
 
 extern struct tcache *mempool_create_tcache(struct mempool *m, const char *name,
         unsigned int mag_size);
+
+#ifdef __cplusplus
+}
+#endif

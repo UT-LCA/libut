@@ -12,6 +12,10 @@
 #include <base/assert.h>
 #include <base/atomic.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct lrpc_msg {
     uint64_t         cmd;
     unsigned long    payload;
@@ -159,3 +163,7 @@ static inline bool lrpc_empty(struct lrpc_chan_in *chan)
 
 extern int lrpc_init_in(struct lrpc_chan_in *chan, struct lrpc_msg *tbl,
             unsigned int size, uint32_t *recv_head_wb);
+
+#ifdef __cplusplus
+}
+#endif

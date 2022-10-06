@@ -10,6 +10,10 @@
 #include <base/time.h>
 #include <base/init.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void logk(int level, const char *fmt, ...)
     __attribute__((__format__ (__printf__, 2, 3)));
 extern void logk_backtrace(void);
@@ -19,6 +23,10 @@ extern void logk_backtrace(void);
     do {if (0) logk(level, fmt, ##__VA_ARGS__);} while (0)
 
 extern int max_loglevel;
+
+#ifdef __cplusplus
+}
+#endif
 
 enum {
     LOG_EMERG    = 0, /* emergency */

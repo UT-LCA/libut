@@ -7,6 +7,10 @@
 #include <base/types.h>
 #include <asm/ops.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define ONE_SECOND    1000000
 #define ONE_MS        1000
 #define ONE_US        1
@@ -43,3 +47,7 @@ static inline void delay_ms(uint64_t ms)
     /* TODO: yield instead of spin */
     __time_delay_us(ms * ONE_MS);
 }
+
+#ifdef __cplusplus
+}
+#endif

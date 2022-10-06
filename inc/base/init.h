@@ -6,6 +6,10 @@
 
 #include <base/stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct init_handler {
     const char *name;
     int (*init)(void);
@@ -32,3 +36,7 @@ extern void init_shutdown(int status) __noreturn;
 
 extern bool base_init_done;
 extern __thread bool thread_init_done;
+
+#ifdef __cplusplus
+}
+#endif
