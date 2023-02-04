@@ -76,6 +76,7 @@ int kthread_init_thread(void)
     spin_lock_np(&klock);
     allks[allksn++] = mykthread;
     assert(allksn <= maxks);
+    mykthread->allks_idx = allksn - 1;
     spin_unlock_np(&klock);
 
     return 0;
@@ -88,20 +89,13 @@ int kthread_init_thread(void)
  */
 int kthread_fini_thread(void)
 {
-    int ksn = 0;
-
-    spin_lock_np(&klock);
-    for (; maxks > ksn; ++ksn) {
-        if (allks[ksn] == myk()) {
-            break;
-        }
+    int kns = myk()->allks_idx;
+    /* TODO: detach kthread then free the instance? */
+    if (allks[kns]->detached) {
+        free(allks[kns]);
+        allks[kns] = NULL;
     }
-    spin_unlock_np(&klock);
-
     /* TODO: close eventfd and destroy rq and locks? */
-    allks[ksn] = NULL;
-    free(myk());
-
     return 0;
 }
 

@@ -329,7 +329,8 @@ struct kthread {
     unsigned int           rcu_gen;
     unsigned int           curr_cpu;
     uint64_t               park_us;
-    unsigned long          pad1[1];
+    int                    allks_idx;
+    unsigned int           pad1[1];
     struct lrpc_chan_out   txq;
 
     /* 3rd cache-line */

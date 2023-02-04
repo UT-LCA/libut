@@ -16,7 +16,7 @@
 #define MAX_LOG_LEN 4096
 
 /* log levels greater than this value won't be printed */
-int max_loglevel = LOG_DEBUG;
+int max_loglevel = LOG_EMERG;
 /* stored here to avoid pushing too much on the stack */
 static __thread char buf[MAX_LOG_LEN];
 
