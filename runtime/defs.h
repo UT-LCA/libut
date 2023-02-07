@@ -158,7 +158,7 @@ enum {
 
 struct stack;
 
-struct thread {
+struct libut_thread {
     struct thread_tf    tf;
     struct list_node    link;
     struct stack        *stack;

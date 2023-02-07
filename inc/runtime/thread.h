@@ -8,9 +8,9 @@
 #include <base/compiler.h>
 #include <runtime/preempt.h>
 
-struct thread;
+struct libut_thread;
 typedef void (*thread_fn_t)(void *arg);
-typedef struct thread thread_t;
+typedef struct libut_thread thread_t;
 
 
 /*

@@ -221,7 +221,7 @@ done:
     return th != NULL;
 }
 
-static __noinline struct thread *do_watchdog(struct kthread *l)
+static __noinline thread_t *do_watchdog(struct kthread *l)
 {
     thread_t *th;
 
@@ -548,7 +548,7 @@ void thread_yield_kthread(void)
 
 static __always_inline thread_t *__thread_create(void)
 {
-    struct thread *th;
+    thread_t *th;
     struct stack *s;
 
     preempt_disable();
@@ -669,7 +669,7 @@ int thread_spawn_main(thread_fn_t fn, void *arg)
 
 static void thread_finish_exit(void)
 {
-    struct thread *th = thread_self();
+    thread_t *th = thread_self();
 
     /* if the main thread dies, kill the whole program */
     if (unlikely(th->main_thread)) {
@@ -779,7 +779,7 @@ int sched_init(void)
      * set up allocation routines for threads
      */
     ret = slab_create(&thread_slab, "runtime_threads",
-              sizeof(struct thread), 0);
+              sizeof(thread_t), 0);
     if (ret)
         return ret;
 

@@ -15,13 +15,13 @@
  * Mutex support
  */
 
-struct mutex {
+struct libut_mutex {
     bool                held;
     spinlock_t          waiter_lock;
     struct list_head    waiters;
 };
 
-typedef struct mutex mutex_t;
+typedef struct libut_mutex mutex_t;
 
 extern bool mutex_try_lock(mutex_t *m);
 extern void mutex_lock(mutex_t *m);
