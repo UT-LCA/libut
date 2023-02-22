@@ -37,23 +37,25 @@ extern void ThreadTrampolineWithJoin(void *arg);
 } // namespace thread_internal
 
 // Spawns a new thread by copying.
-static inline void Spawn(const std::function<void()>& func) {
+static inline thread_t* Spawn(const std::function<void()>& func) {
   void *buf;
   thread_t *th = thread_create_with_buf(thread_internal::ThreadTrampoline, &buf,
 					sizeof(std::function<void()>));
   if (unlikely(!th)) BUG();
   new(buf) std::function<void()>(func);
   thread_ready(th);
+  return th;
 }
 
 // Spawns a new thread by moving.
-static inline void Spawn(std::function<void()>&& func) {
+static inline thread_t* Spawn(std::function<void()>&& func) {
   void *buf;
   thread_t *th = thread_create_with_buf(thread_internal::ThreadTrampoline, &buf,
 					sizeof(std::function<void()>));
   if (unlikely(!th)) BUG();
   new(buf) std::function<void()>(std::move(func));
   thread_ready(th);
+  return th;
 }
 
 // Called from a running thread to exit.
