@@ -296,25 +296,46 @@ again:
 
     last_nrks = load_acquire(&nrks);
 
-    /* then try to steal from a sibling kthread */
-    sibling = cpu_map[l->curr_cpu].sibling_core;
-    r = cpu_map[sibling].recent_kthread;
-    if (r && r != l && steal_work(l, r))
-        goto done;
-
-    /* then try to steal from a random kthread */
-    r = ks[rand_crc32c((uintptr_t)l) % last_nrks];
-    if (r != l && steal_work(l, r))
-        goto done;
-
-    /* finally try to steal from every kthread */
-    for (i = 0; i < last_nrks; i++)
-        if (ks[i] != l && steal_work(l, ks[i]))
+    i = 0;
+    /* then try to steal from a thread-sibling kthread */
+    while (RUNTIME_MAX_SIBLINGS > i &&
+           0 != cpu_map[l->curr_cpu].sibling_core[i]) {
+        sibling = cpu_map[l->curr_cpu].sibling_core[i] - 1;
+        r = cpu_map[sibling].recent_kthread;
+        if (r && r != l && steal_work(l, r))
             goto done;
+        ++i;
+    }
+
+    if (RUNTIME_SCHED_POLL_LVL1 <= iters)
+    {
+        /* then try to steal from a cache-sibling kthread */
+        while (RUNTIME_MAX_SIBLINGS > ++i &&
+               0 != cpu_map[l->curr_cpu].sibling_core[i]) {
+            sibling = cpu_map[l->curr_cpu].sibling_core[i] - 1;
+            r = cpu_map[sibling].recent_kthread;
+            if (r && r != l && steal_work(l, r))
+                goto done;
+        }
+
+        /* then try to steal from a random kthread */
+        r = ks[rand_crc32c((uintptr_t)l) % last_nrks];
+        if (r != l && steal_work(l, r))
+            goto done;
+
+    }
+
+    if (RUNTIME_SCHED_POLL_LVL2 <= iters)
+    {
+        /* finally try to steal from every kthread */
+        for (i = 0; i < last_nrks; i++)
+            if (ks[i] != l && steal_work(l, ks[i]))
+                goto done;
+    }
 
     /* keep trying to find work until the polling timeout expires */
     if (!preempt_needed() &&
-        (++iters < RUNTIME_SCHED_POLL_ITERS ||
+        (++iters < RUNTIME_SCHED_POLL_MAX ||
          libut_rdtsc() - start_tsc <
          cycles_per_us * RUNTIME_SCHED_MIN_POLL_US))
         goto again;
@@ -796,8 +817,32 @@ int sched_init(void)
                     cpu_count, j) {
             if (i == j)
                 continue;
-            BUG_ON(siblings++);
-            cpu_map[i].sibling_core = j;
+            BUG_ON(RUNTIME_MAX_SIBLINGS <= siblings);
+            cpu_map[i].sibling_core[siblings++] = j + 1; /* 1-indexed */
+        }
+
+        if (RUNTIME_MAX_SIBLINGS <= siblings)
+            continue;
+        cpu_map[i].sibling_core[siblings++] = 0; /* 0 as a seperator */
+        if (RUNTIME_MAX_SIBLINGS <= siblings)
+            continue;
+
+        for (j = i;
+             j = bitmap_find_next_set(cpu_info_tbl[i].l2_siblings_mask,
+                                      cpu_count, j + 1),
+             j < cpu_count;) {
+            if (bitmap_test(cpu_info_tbl[i].thread_siblings_mask, j))
+                continue;
+            cpu_map[i].sibling_core[siblings++] = j + 1; /* 1-indexed */
+            if (RUNTIME_MAX_SIBLINGS <= siblings)
+                break;
+        }
+        bitmap_for_each_set(cpu_info_tbl[i].l2_siblings_mask, i, j) {
+            if (bitmap_test(cpu_info_tbl[i].thread_siblings_mask, j))
+                continue;
+            cpu_map[i].sibling_core[siblings++] = j + 1; /* 1-indexed */
+            if (RUNTIME_MAX_SIBLINGS <= siblings)
+                break;
         }
     }
 

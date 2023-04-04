@@ -29,7 +29,10 @@
 #define RUNTIME_RQ_SIZE           32
 #define RUNTIME_SOFTIRQ_BUDGET    16
 #define RUNTIME_MAX_TIMERS        4096
-#define RUNTIME_SCHED_POLL_ITERS  4
+#define RUNTIME_MAX_SIBLINGS      7
+#define RUNTIME_SCHED_POLL_LVL1   1
+#define RUNTIME_SCHED_POLL_LVL2   3
+#define RUNTIME_SCHED_POLL_MAX    4
 #define RUNTIME_SCHED_MIN_POLL_US 2
 #define RUNTIME_WATCHDOG_US       50
 
@@ -398,8 +401,7 @@ extern void kthread_wait_to_attach(void);
 
 struct cpu_record {
     struct kthread *recent_kthread;
-    unsigned long sibling_core;
-    unsigned long pad[6];
+    unsigned long sibling_core[RUNTIME_MAX_SIBLINGS]; /* 1-indexed */
 };
 
 BUILD_ASSERT(sizeof(struct cpu_record) == CACHE_LINE_SIZE);

@@ -18,6 +18,8 @@
 
 /* the number of CPU nodes detected */
 int cpu_count;
+/* the number of L2 cache detected */
+int l2_count;
 /* the number of NUMA nodes detected */
 int numa_count;
 /* a table of information on each CPU */
@@ -67,6 +69,12 @@ static int cpu_scan_topology(void)
         return -EINVAL;
     }
 
+    /* reset L2 count and cluster index */
+    l2_count = 0;
+    for (i = 0; i < cpu_count; ++i) {
+        cpu_info_tbl[i].cluster = -1;
+    }
+
     /* Scan the CPU topology. */
     for (i = 0; i < cpu_count; i++) {
         snprintf(path, sizeof(path), SYSFS_CPU_TOPOLOGY_PATH
@@ -82,6 +90,31 @@ static int cpu_scan_topology(void)
         if (sysfs_parse_bitlist(path,
             cpu_info_tbl[i].core_siblings_mask, cpu_count))
             return -EIO;
+
+        int idx;
+        /* try out the L2 cache index */
+        for (idx = 0; 4 > idx; ++idx) {
+            snprintf(path, sizeof(path), SYSFS_CPU_CACHE_PATH
+                 "/level", i, idx);
+            if (sysfs_parse_val(path, &tmp))
+                return -EIO;
+            if (2 == tmp) {
+                break;
+            }
+        }
+        snprintf(path, sizeof(path), SYSFS_CPU_CACHE_PATH
+             "/shared_cpu_list", i, idx);
+        if (sysfs_parse_bitlist(path,
+            cpu_info_tbl[i].l2_siblings_mask, cpu_count))
+            return -EIO;
+        if (-1 == cpu_info_tbl[i].cluster) {
+            int sibling_id;
+            /* first of a new L2 cluster */
+            bitmap_for_each_set(cpu_info_tbl[i].l2_siblings_mask, cpu_count,
+                                sibling_id)
+                cpu_info_tbl[sibling_id].cluster = l2_count;
+            l2_count++;
+        }
 
         snprintf(path, sizeof(path), SYSFS_CPU_TOPOLOGY_PATH
              "/thread_siblings_list", i);
