@@ -149,7 +149,8 @@ static void control_destroy_proc(struct proc *p)
     for (i = 0; i < p->thread_count; i++)
         close(p->threads[i].park_efd);
 
-    nr_guaranteed -= p->sched_cfg.guaranteed_cores;
+    if (!p->removed)
+        nr_guaranteed -= p->sched_cfg.guaranteed_cores;
     mem_unmap_shm(p->region.base);
     //free(p->overflow_queue);
     free(p);
@@ -300,6 +301,7 @@ static void control_instruct_dataplane_to_remove_client(int fd)
     }
 
     clients[i]->removed = true;
+    nr_guaranteed -= clients[i]->sched_cfg.guaranteed_cores;
     if (!lrpc_send(&lrpc_control_to_data, DATAPLANE_REMOVE_CLIENT,
             (unsigned long) clients[i])) {
         log_err("control: failed to inform dataplane of removed client");

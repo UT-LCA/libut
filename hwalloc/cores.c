@@ -14,7 +14,7 @@
 
 #include "defs.h"
 
-/*#define CORES_NOHT 1*/
+#define CORES_NOHT 1
 
 static unsigned int nr_avail_cores;
 static unsigned int total_cores;
@@ -246,7 +246,6 @@ static inline void thread_reserve(struct thread *th, unsigned int core)
     /* add the thread to the polling array */
     th->parked = false;
     th->waking = true;
-    poll_thread(th);
 }
 
 /**
@@ -677,6 +676,7 @@ void cores_free_proc(struct proc *p)
     proc_clear_bursting(p);
     proc_clear_overloaded(p);
 
+    /* a thread not in available_threads is running, occupying a core */
     bitmap_for_each_cleared(p->available_threads, p->thread_count, i)
         cores_park_kthread(&p->threads[i], true);
 }
@@ -784,6 +784,7 @@ int cores_init(void)
         panic("cores: couldn't find any cores on package 0");
     core_assign.dp_core = i;
 
+#ifndef CORES_NOHT
     /* parse hyperthread information */
     for (i = 0; i < cpu_count; i++) {
         int siblings = 0;
@@ -807,6 +808,7 @@ int cores_init(void)
             cpu_siblings[i] = i ^ 0x01;
         }
     }
+#endif
 
     /* assign the dataplane's sibling to linux and the control thread */
     core_assign.linux_core = cpu_to_sibling_cpu(core_assign.dp_core);
