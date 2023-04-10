@@ -168,6 +168,7 @@ struct libut_thread {
     unsigned int        main_thread:1;
     unsigned int        state;
     unsigned int        stack_busy;
+    int                 cpu_wanted;
 };
 
 typedef void (*runtime_fn_t)(void);

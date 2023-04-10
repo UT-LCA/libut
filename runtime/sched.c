@@ -276,11 +276,11 @@ static __noreturn __noinline void schedule(void)
             goto done;
     }
 
+again:
     /* move overflow tasks into the runqueue */
     if (unlikely(!list_empty(&l->rq_overflow)))
         drain_overflow(l);
 
-again:
     /* first try the local runqueue */
     if (l->rq_head != l->rq_tail)
         goto done;
@@ -502,7 +502,7 @@ void thread_yield(void)
     assert(myth->state == THREAD_STATE_RUNNING);
     myth->state = THREAD_STATE_SLEEPING;
     store_release(&myth->stack_busy, true);
-    thread_ready(myth);
+    throw_work(myth, myth->cpu_wanted);
 
     enter_schedule(myth);
 }
@@ -536,6 +536,46 @@ void thread_ready(thread_t *th)
     store_release(&k->rq_head, k->rq_head + 1);
     k->q_ptrs->rq_head++;
     putk();
+}
+
+/**
+ * throw_work - try adding work for the kthread on the given core
+ * @th: the thread to mark runnable
+ * @core: the affinity of the core, -1 to use the same core as this kthread
+ *
+ * This function can only be called when @th is sleeping.
+ */
+void throw_work(thread_t *th, int core)
+{
+    uint32_t rq_tail;
+    struct kthread *r;
+
+    if (th->cpu_wanted != core)
+        th->cpu_wanted = core;
+
+    if (-1 == core) {
+        thread_ready(th);
+        return;
+    }
+
+    core %= cpu_count;
+    if (myk()->curr_cpu == core) {
+        thread_ready(th);
+        return;
+    }
+
+    r = cpu_map[core].recent_kthread;
+    if (r && spin_try_lock_np(&r->lock)) {
+        if (likely(!(r->detached || r->parked))) {
+            th->state = THREAD_STATE_RUNNABLE;
+            list_add_tail(&r->rq_overflow, &th->link);
+            spin_unlock_np(&r->lock);
+            return;
+        }
+        spin_unlock_np(&r->lock);
+    }
+    thread_ready(th);
+    return;
 }
 
 static void thread_finish_yield_kthread(void)
