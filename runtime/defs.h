@@ -27,6 +27,7 @@
 #define RUNTIME_STACK_SIZE        128 * KB
 #define RUNTIME_GUARD_SIZE        128 * KB
 #define RUNTIME_RQ_SIZE           32
+#define RUNTIME_RRQ_SIZE          7
 #define RUNTIME_SOFTIRQ_BUDGET    16
 #define RUNTIME_MAX_TIMERS        4096
 #define RUNTIME_MAX_SIBLINGS      7
@@ -342,8 +343,12 @@ struct kthread {
 
     /* 4th-7th cache-line */
     thread_t               *rq[RUNTIME_RQ_SIZE];
-
     /* 8th cache-line */
+    thread_t               *rrq[RUNTIME_RRQ_SIZE];
+    uint32_t               rrq_head;
+    uint32_t               rrq_tail;
+
+    /* 9th cache-line */
     spinlock_t             timer_lock;
     unsigned int           timern;
     struct timer_idx       *timers;
@@ -355,6 +360,7 @@ BUILD_ASSERT(offsetof(struct kthread, lock) % CACHE_LINE_SIZE == 0);
 BUILD_ASSERT(offsetof(struct kthread, q_ptrs) % CACHE_LINE_SIZE == 0);
 //BUILD_ASSERT(offsetof(struct kthread, txpktq) % CACHE_LINE_SIZE == 0);
 BUILD_ASSERT(offsetof(struct kthread, rq) % CACHE_LINE_SIZE == 0);
+BUILD_ASSERT(offsetof(struct kthread, rrq) % CACHE_LINE_SIZE == 0);
 BUILD_ASSERT(offsetof(struct kthread, timer_lock) % CACHE_LINE_SIZE == 0);
 
 extern __thread struct kthread *mykthread;

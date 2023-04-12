@@ -281,7 +281,16 @@ again:
     if (unlikely(!list_empty(&l->rq_overflow)))
         drain_overflow(l);
 
-    /* first try the local runqueue */
+    /* first try the local receive runqueue, see if any targeted task */
+    if (l->rrq_head != l->rrq_tail) {
+        th = l->rrq[l->rrq_tail++ % RUNTIME_RRQ_SIZE];
+        goto done;
+    }
+
+    /* reset the local receive runqueue since it's empty */
+    l->rrq_head = l->rrq_tail = 0;
+
+    /* then try the local runqueue */
     if (l->rq_head != l->rq_tail)
         goto done;
 
@@ -429,10 +438,21 @@ static __always_inline void enter_schedule(thread_t *myth)
 
     assert_preempt_disabled();
 
+    /* lock-free path: get a task targetted for this kthread */
+    if (unlikely(k->rrq_head != k->rrq_tail)) {
+        th = k->rrq[k->rrq_tail % RUNTIME_RRQ_SIZE];
+        if (likely(!th->stack_busy)) { /* has been released */
+            k->rrq_tail++;
+            jmp_thread_direct(myth, th);
+            return;
+        } /* else if stack_busy, could dead-lock in jmp_thread_direct */
+    }
+
     spin_lock(&k->lock);
 
     /* slow path: switch from the uthread stack to the runtime stack */
     if (k->rq_head == k->rq_tail ||
+        unlikely(k->rrq_head != k->rrq_tail) || /* might have targeted task */
         (!disable_watchdog &&
          unlikely(libut_rdtsc() - last_watchdog_tsc >
               cycles_per_us * RUNTIME_WATCHDOG_US))) {
@@ -568,7 +588,12 @@ void throw_work(thread_t *th, int core)
     if (r && spin_try_lock_np(&r->lock)) {
         if (likely(!(r->detached || r->parked))) {
             th->state = THREAD_STATE_RUNNABLE;
-            list_add_tail(&r->rq_overflow, &th->link);
+            if (unlikely(r->rrq_head - r->rrq_tail >= RUNTIME_RRQ_SIZE)) {
+                list_add_tail(&r->rq_overflow, &th->link);
+            } else {
+                r->rrq[r->rrq_head % RUNTIME_RRQ_SIZE] = th;
+                store_release(&r->rrq_head, r->rrq_head + 1);
+            }
             spin_unlock_np(&r->lock);
             return;
         }
