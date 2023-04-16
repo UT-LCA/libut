@@ -246,6 +246,7 @@ static inline void thread_reserve(struct thread *th, unsigned int core)
     /* add the thread to the polling array */
     th->parked = false;
     th->waking = true;
+    poll_thread(th);
 }
 
 /**
@@ -270,6 +271,7 @@ static inline void thread_cede(struct thread *th)
 
     /* remove the thread from the polling array (if queues are empty) */
     th->parked = true;
+    unpoll_thread(th);
 }
 
 /*
