@@ -522,7 +522,7 @@ void thread_yield(void)
     assert(myth->state == THREAD_STATE_RUNNING);
     myth->state = THREAD_STATE_SLEEPING;
     store_release(&myth->stack_busy, true);
-    throw_work(myth, myth->cpu_wanted);
+    thread_throw(myth, myth->cpu_wanted);
 
     enter_schedule(myth);
 }
@@ -559,15 +559,14 @@ void thread_ready(thread_t *th)
 }
 
 /**
- * throw_work - try adding work for the kthread on the given core
+ * thread_throw - try adding work for the kthread on the given core
  * @th: the thread to mark runnable
  * @core: the affinity of the core, -1 to use the same core as this kthread
  *
  * This function can only be called when @th is sleeping.
  */
-void throw_work(thread_t *th, int core)
+void thread_throw(thread_t *th, int core)
 {
-    uint32_t rq_tail;
     struct kthread *r;
 
     if (th->cpu_wanted != core)
@@ -601,6 +600,32 @@ void throw_work(thread_t *th, int core)
     }
     thread_ready(th);
     return;
+}
+
+/**
+ * thread_swap - swap current uthread with the given one
+ * @th: the thread to swap in
+ * @core: the core affinity for the current uthread to be yield,
+ *        -1 to use the same core as this kthread
+ *
+ * This function can only be called when @th is sleeping.
+ */
+void thread_swap(thread_t *th, int core)
+{
+    thread_t *myth = thread_self();
+
+    /* check for softirqs */
+    softirq_run(RUNTIME_SOFTIRQ_BUDGET);
+
+    preempt_disable();
+    assert(myth->state == THREAD_STATE_RUNNING);
+    myth->state = THREAD_STATE_SLEEPING;
+    store_release(&myth->stack_busy, true);
+    thread_throw(myth, core);
+
+    assert(th->state == THREAD_STATE_SLEEPING);
+    th->state = THREAD_STATE_RUNNABLE;
+    jmp_thread_direct(myth, th);
 }
 
 static void thread_finish_yield_kthread(void)

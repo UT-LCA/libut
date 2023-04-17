@@ -20,7 +20,8 @@ typedef struct libut_thread thread_t;
 
 extern void thread_park_and_unlock_np(spinlock_t *l);
 extern void thread_ready(thread_t *thread);
-extern void throw_work(thread_t *thread, int core);
+extern void thread_throw(thread_t *thread, int core);
+extern void thread_swap(thread_t *thread, int core);
 extern thread_t *thread_create(thread_fn_t fn, void *arg);
 extern thread_t *thread_create_with_buf(thread_fn_t fn, void **buf, size_t len);
 

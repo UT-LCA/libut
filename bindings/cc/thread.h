@@ -37,24 +37,34 @@ extern void ThreadTrampolineWithJoin(void *arg);
 } // namespace thread_internal
 
 // Spawns a new thread by copying.
-static inline thread_t* Spawn(const std::function<void()>& func, int core = -1) {
+static inline thread_t* Spawn(const std::function<void()>& func,
+                              bool swap = false, int core = -1) {
   void *buf;
   thread_t *th = thread_create_with_buf(thread_internal::ThreadTrampoline, &buf,
 					sizeof(std::function<void()>));
   if (unlikely(!th)) BUG();
   new(buf) std::function<void()>(func);
-  throw_work(th, core);
+  if (swap) {
+      thread_swap(th, core);
+  } else {
+      thread_throw(th, core);
+  }
   return th;
 }
 
 // Spawns a new thread by moving.
-static inline thread_t* Spawn(std::function<void()>&& func, int core = -1) {
+static inline thread_t* Spawn(std::function<void()>&& func,
+                              bool swap = false, int core = -1) {
   void *buf;
   thread_t *th = thread_create_with_buf(thread_internal::ThreadTrampoline, &buf,
 					sizeof(std::function<void()>));
   if (unlikely(!th)) BUG();
   new(buf) std::function<void()>(std::move(func));
-  throw_work(th, core);
+  if (swap) {
+      thread_swap(th, core);
+  } else {
+      thread_throw(th, core);
+  }
   return th;
 }
 
