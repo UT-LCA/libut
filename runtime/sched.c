@@ -569,13 +569,13 @@ void thread_throw(thread_t *th, int kidx)
 {
     struct kthread *r;
 
-    if (th->kthread_wanted != kidx)
-        th->kthread_wanted = kidx;
-
     if (-1 == kidx) {
         thread_ready(th);
         return;
     }
+
+    if (th->kthread_wanted != kidx)
+        th->kthread_wanted = kidx;
 
     kidx %= maxks;
     r = allks[kidx];
