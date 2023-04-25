@@ -244,7 +244,7 @@ void condvar_wait(condvar_t *cv, mutex_t *m)
 }
 
 /**
- * condvar_signal - signals a thread waiting on a condition variable
+ * condvar_signal - signals a thread waiting on a condition variable (MESA)
  * @cv: the condition variable to signal
  */
 void condvar_signal(condvar_t *cv)
@@ -256,6 +256,22 @@ void condvar_signal(condvar_t *cv)
     spin_unlock_np(&cv->waiter_lock);
     if (waketh)
         thread_ready(waketh);
+}
+
+/**
+ * condvar_signal_and_swap - signals a thread waiting on a condition variable
+ *                           and swap on the thread immediately (HOARE)
+ * @cv: the condition variable to signal
+ */
+void condvar_signal_and_swap(condvar_t *cv)
+{
+    thread_t *waketh;
+
+    spin_lock_np(&cv->waiter_lock);
+    waketh = list_pop(&cv->waiters, thread_t, link);
+    spin_unlock_np(&cv->waiter_lock);
+    if (waketh)
+        thread_swap(waketh, -1);
 }
 
 /**

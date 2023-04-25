@@ -86,6 +86,9 @@ class CondVar {
   // Wake up one waiter.
   void Signal() { condvar_signal(&cv_); }
 
+  // Wake up one waiter.
+  void SignalSwap() { condvar_signal_and_swap(&cv_); }
+
   // Wake up all waiters.
   void SignalAll() { condvar_broadcast(&cv_); }
 
