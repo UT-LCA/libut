@@ -123,5 +123,12 @@ static inline void assert_preempt_disabled(void)
  */
 static inline void clear_preempt_needed(void)
 {
+#if __cplusplus
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvolatile"
+#endif
     preempt_cnt |= PREEMPT_NOT_PENDING;
+#if __cplusplus
+#pragma GCC diagnostic pop
+#endif
 }
