@@ -40,6 +40,9 @@ tbench: $(tbench_obj) $(librt_libs)
 tbench_qthread: tbench_qthread.cc
 	g++ -o $@ -I${QTHREAD_INC} -L${QTHREAD_LIB} $< ${QTHREAD_LIB}/libqthread.a -lhwloc -lm -lpthread
 
+tbench_pthread: tbench_pthread.cc
+	g++ -o $@ $< -lpthread
+
 # general build rules for all targets
 src = $(tbench_src) $(tbench_qthread_src)
 obj = $(src:.cc=.o)
@@ -58,4 +61,4 @@ endif
 
 .PHONY: clean
 clean:
-	rm -f $(obj) $(dep) tbench tbench_qthread
+	rm -f $(obj) $(dep) tbench tbench_qthread tbench_pthread
