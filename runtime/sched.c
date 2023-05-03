@@ -613,9 +613,6 @@ void thread_swap(thread_t *th, int kidx)
 {
     thread_t *myth = thread_self();
 
-    /* check for softirqs */
-    softirq_run(RUNTIME_SOFTIRQ_BUDGET);
-
     preempt_disable();
     assert(myth->state == THREAD_STATE_RUNNING);
     myth->state = THREAD_STATE_SLEEPING;
